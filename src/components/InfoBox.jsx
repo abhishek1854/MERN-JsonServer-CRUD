@@ -9,14 +9,6 @@ const InfoBox = ({students}) => {
   const totalStudents = students.length;
   const totalSubjects = subjects.length;
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      const students = await getStudents();
-      setStudentCount(students.length);
-    };
-    fetchStudents();
-  }, []);
-
   return (
     <Box
       sx={{
