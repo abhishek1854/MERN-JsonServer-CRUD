@@ -28,6 +28,7 @@
             setFormData((prev) => ({ ...prev, [name]: parsedValue }));
         };
 
+
         const isNameInvalid = touched.name && formData.name.trim() === '';
         const isSubjectsInvalid = touched.subjects && formData.subjects.length === 0;
 

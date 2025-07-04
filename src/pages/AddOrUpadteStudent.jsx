@@ -4,6 +4,7 @@ import localStorageService from '../utils/localStorage';
 import FormComponent from '../components/Form';
 import { toast } from 'react-hot-toast';
 import FormSkeleton from '../components/skeletons/FromSkeleton';
+import { addStudent, getStudents, updateStudent } from '../utils/jsonServerApis';
 
 const FormPage = () => {
     const { id } = useParams();
@@ -16,30 +17,31 @@ const FormPage = () => {
     const hasShownToast = useRef(false);
 
     useEffect(() => {
-        const data = localStorageService.getElement('studentData') || [];
-        setStudents(data);
+        async function fetchStudent() {
+            const data = await getStudents();
+            setStudents(data);
 
-        if (isEditMode) {
-            const student = data.find((s) => String(s.id) === String(id));
-            if (student) {
-                setFormData(student);
-            } else if (!hasShownToast.current) {
-                toast.error('Student not found', {
-                    position: 'bottom-right',
-                    style: { fontSize: '1.2rem' }
-                });
-                hasShownToast.current = true;
-                navigate('/');
+            if (isEditMode) {
+                const student = data.find((s) => String(s.id) === String(id));
+                console.log(student)
+                if (student) {
+                    setFormData(student);
+                } else if (!hasShownToast.current) {
+                    toast.error('Student not found', {
+                        position: 'bottom-right',
+                        style: { fontSize: '1.2rem' }
+                    });
+                    hasShownToast.current = true;
+                    navigate('/');
+                }
             }
-        }
-        const delay = setTimeout(() => {
             setLoading(false);
-        }, 500);
+        }
 
-        return () => clearTimeout(delay);
+        fetchStudent();
     }, [id, isEditMode, navigate]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!formData.name.trim() || formData.subjects.length === 0) {
@@ -51,24 +53,22 @@ const FormPage = () => {
         }
 
         if (isEditMode) {
-            const updated = students.map((s) =>
-                String(s.id) === String(id) ? { ...s, ...formData } : s
-            );
-            localStorageService.setElement('studentData', updated);
-            setStudents(updated);
-            toast.success('Student updated successfully', {
-                position: 'bottom-right',
-                style: { fontSize: '1.2rem' }
-            });
+            console.log("formData", formData)
+            const data = await updateStudent(formData);
+            if (data) {
+                const updated = students.map((s) =>
+                    String(s.id) === String(id) ? { ...s, ...formData } : s
+                );
+                setStudents(updated);
+
+            }
         } else {
-            const newStudent = { ...formData, id: Date.now() };
-            const updated = [...students, newStudent];
-            localStorageService.setElement('studentData', updated);
-            setStudents(updated);
-            toast.success('Student added successfully', {
-                position: 'bottom-right',
-                style: { fontSize: '1.2rem' }
-            });
+            const newStudent = { ...formData, id: String(Date.now()) };
+            const response = await addStudent(newStudent);
+            if (response) {
+                setStudents([...students, response]);
+
+            }
         }
 
         navigate('/');

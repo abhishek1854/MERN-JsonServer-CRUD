@@ -23,6 +23,7 @@ import localStorageService from '../utils/localStorage';
 import WarningModal from '../components/WarningModal';
 import InfoBox from '../components/InfoBox';
 import HomePageSkeleton from '../components/skeletons/HomePageSkeleton';
+import { deleteStudent, getStudents, deleteAllStudents } from "../utils/jsonServerApis"
 
 const Home = () => {
     const navigate = useNavigate();
@@ -42,8 +43,14 @@ const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const storedStudents = localStorageService.getElement('studentData') || [];
-        setStudents(storedStudents);
+
+        async function fetchStudents() {
+            const data = await getStudents();
+            console.log("Log from Home", data)
+            setStudents(data)
+        }
+
+        fetchStudents();
         const delay = setTimeout(() => {
             setIsLoading(false);
         }, 500);
@@ -61,34 +68,24 @@ const Home = () => {
         setDeleteTarget(null);
     };
 
-    const handleDeleteConfirmed = () => {
-        const allStudents = localStorageService.getElement('studentData') || [];
-
+    const handleDeleteConfirmed = async () => {
         if (deleteTarget === null) {
-            localStorageService.removeElement('studentData');
-            setStudents([]);
+            await deleteAllStudents();
+            const updated = await getStudents();
+            setStudents(updated);
         } else {
-            const updated = allStudents.filter((s) => s.id !== deleteTarget.id);
-            localStorageService.setElement('studentData', updated);
-
-            const currentFiltered = searchQuery
-                ? updated.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                : updated;
-
-            setStudents(currentFiltered);
+            await deleteStudent(deleteTarget.id);
+            const updated = await getStudents();
+            setStudents(updated);
         }
-
         handleDialogClose();
-        toast.success('Deleted successfully', {
-            position: 'bottom-right',
-            style: { fontSize: '1.2rem' }
-        });
+
     };
 
 
-    const handleSearch = (query) => {
+    const handleSearch = async (query) => {
         setSearchQuery(query);
-        const stored = localStorageService.getElement('studentData') || [];
+        const stored = await getStudents() || [];
         setStudents(
             query.trim() === ''
                 ? stored
@@ -98,13 +95,13 @@ const Home = () => {
         );
     };
 
-    const clearSearch = () => {
+    const clearSearch = async () => {
         setSearchQuery('');
         setIsNameSorted(false);
         setIsSubjectSorted(false);
         setSortOrder('asc');
         setSubjectSortOrder('asc');
-        const originalData = localStorageService.getElement('studentData') || [];
+        const originalData = await getStudents() || [];
         setStudents(originalData);
         toast.success('Filters cleared', {
             position: 'bottom-right',
@@ -168,7 +165,7 @@ const Home = () => {
         <Box sx={{ fontFamily: 'Arial, sans-serif', minHeight: 'fit-content', bgcolor: '#e0e0e0', px: { xs: 0.5, sm: 4 }, py: { xs: 1, sm: 3 } }}>
             {isLoading ? (<HomePageSkeleton />) : (<>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 3, mb: 2, px: 2 }}>
-                    <InfoBox />
+                    <InfoBox students={students} />
                 </Box>
 
                 <Box

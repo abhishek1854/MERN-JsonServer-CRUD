@@ -1,11 +1,21 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { Box, Typography } from '@mui/material';
 import subjects from '../data/subjects';
 import localStorageService from '../utils/localStorage';
+import { getStudents } from '../utils/jsonServerApis';
 
-const InfoBox = () => {
-  const totalStudents = localStorageService.getElement('studentData')?.length || 0;
+const InfoBox = ({students}) => {
+  // const [studentCount, setStudentCount] = useState(0);
+  const totalStudents = students.length;
   const totalSubjects = subjects.length;
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const students = await getStudents();
+      setStudentCount(students.length);
+    };
+    fetchStudents();
+  }, []);
 
   return (
     <Box
