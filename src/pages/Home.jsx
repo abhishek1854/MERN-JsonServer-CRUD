@@ -19,7 +19,6 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ClearIcon from '@mui/icons-material/Clear';
 import toast from 'react-hot-toast';
 
-import localStorageService from '../utils/localStorage';
 import WarningModal from '../components/WarningModal';
 import InfoBox from '../components/InfoBox';
 import HomePageSkeleton from '../components/skeletons/HomePageSkeleton';
@@ -70,9 +69,8 @@ const Home = () => {
 
     const handleDeleteConfirmed = async () => {
         if (deleteTarget === null) {
-            await deleteAllStudents();
-            const updated = await getStudents();
-            setStudents(updated);
+            await deleteAllStudents();;
+            setStudents([]);
         } else {
             await deleteStudent(deleteTarget.id);
             const updated = await getStudents();
